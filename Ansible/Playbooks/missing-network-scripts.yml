@@ -1,0 +1,51 @@
+- name: Network Manager check-up script.
+  hosts: all
+  remote_user: remoteuser
+  tasks:
+    - name: Checking NetworkManager state
+      service_facts:
+      register: networkmanager
+
+    - name: Where NetworkManager is not active, checking packages and scripts
+      block:
+        - name: Searching for packages
+          package_facts:
+            manager: "auto"
+
+        - name: Where initscripts are missing?
+          debug:
+            msg: "initscripts missing on {{ ansible_hostname }}"
+          changed_when: false
+          when: "'initscripts' not in ansible_facts.packages"
+
+        - name: Where network-scripts are missing?
+          debug:
+            msg: "network-scripts missing on {{ ansible_hostname }}"
+          when: "'network-scripts' not in ansible_facts.packages"
+
+        - name: Getting scripts
+          find:
+            paths:
+              - "/etc/sysconfig/network-scripts/"
+            patterns:
+              - "if*"
+              - "netw*"
+              - "init*"
+          register: find_result
+
+        - name: Registering scripts
+          set_fact:
+            filepath: "{{ find_result.files | map(attribute='path') | list }}"
+
+        - name: Showing servers where less/equals to 5 scripts
+          debug:
+            msg: "scripts missing on {{ ansible_hostname }}"
+          when: filepath | length <= 5
+
+        - name: Showing servers where more/equals to 6 scripts
+          debug:
+            msg: "scripts are existant on {{ ansible_hostname }}"
+          when: filepath | length >= 6
+
+      when: (ansible_os_family == "RedHat") and (networkmanager.ansible_facts.services['NetworkManager.service'].state != "running")
+      become: true

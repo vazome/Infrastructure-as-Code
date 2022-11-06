@@ -1,0 +1,12 @@
+#You can pass additional variables if you like
+all:
+  vars:
+    inventory: redhatbased
+    dns_servers:
+      - server1
+      - server2
+    dns_servers_string: server1 server2
+    dns_search: domain1.name domain2.name
+  hosts:
+    hostaddress1:
+    hostaddress2:

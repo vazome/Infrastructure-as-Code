@@ -1,0 +1,12 @@
+- name: List active services for specific users
+  hosts: all
+  remote_user: somerootuser
+  become: true
+  tasks:
+    - name: Searching for processes
+      shell: "ps axo user,%cpu,stat,command | awk 'NR==1 || /^user1|^user2|^user3|^user4/ {print $0}' | grep -v 'sudo via ansible'" 
+      register: services_list
+
+    - name: Listing processes
+      debug:
+        msg: "{{ services_list.stdout_lines }}"

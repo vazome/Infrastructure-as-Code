@@ -1,0 +1,45 @@
+- name: List Repositories
+  hosts: inventory_group
+  remote_user: someonewithroot
+  become: true
+  tasks:
+
+  - name: RedHat
+    block:
+      - name: Get RedHat Repo Enabled
+        shell: yum repolist enabled | awk '{print $1}'
+        register: redhat_repos_enabled
+
+      - name: Get RedHat Repo Disabled
+        shell: yum repolist disabled | awk '{print $1}'
+        register: redhat_repos_disabled
+
+      - name: List RedHat Enabled
+        debug:
+          msg: "{{ redhat_repos_enabled.stdout_lines }}"
+
+      - name: List RedHat Disabled
+        debug:
+          msg: "{{ redhat_repos_disabled.stdout_lines }}"
+
+    when: (ansible_os_family == "RedHat")
+
+  - name: Debian
+    block:
+      - name: Get Debian Repo Enabled
+        shell: grep -rhE ^deb /etc/apt/sources.list* 
+        register: debian_repos_enabled
+
+      - name: Get Debian Repo Disabled
+        shell: grep -rhE "^# deb|#deb" /etc/apt/sources.list* 
+        register: debian_repos_disabled
+
+      - name: List Debian Enabled
+        debug:
+          msg: "{{ debian_repos_enabled.stdout_lines }}"
+
+      - name: List Debian Disabled
+        debug:
+          msg: "{{ debian_repos_disabled.stdout_lines }}"
+
+    when: (ansible_os_family == "Debian")
