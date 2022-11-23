@@ -1,0 +1,33 @@
+- name: Deploy sudo user and SSH public key
+  hosts: all
+  become: true
+  remote_user: remoteusername
+  gather_facts: true
+  tasks:
+  - name: Debian
+    block:
+      - name: Creating user Debian
+        user:
+          name: new-user-name
+          password: ''
+          append: yes
+          groups: sudo
+          state: present
+    when: (ansible_os_family == "Debian")
+
+  - name: CentOS
+    block:
+      - name: Creating user CentOS
+        user:
+          name: new-user-name
+          password: ''
+          append: yes
+          groups: wheel
+          state: present
+    when: (ansible_os_family == "RedHat")
+
+  - name: Push Public Key
+    ansible.posix.authorized_key:
+      user: new-user-name
+      state: present
+      key: "{{ lookup('file', '/Users/localuser/somekey.pub') }}"
